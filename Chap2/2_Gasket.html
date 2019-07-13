@@ -41,34 +41,47 @@ window.onload = function()
     let program = initShaders(gl);
     // 3 顶点数据
     let points = initPoints();
+   
     // 4 数据传输
     bufferData(gl,flatten(points));
     attrData(gl,program,"vPosition");
+
     // 5 渲染
     render(gl,points);
 }
 
 function initPoints()
-{
+{   
+    let points = [];
     let vertices = [
-        vec2(-1,-1),
-        vec2(0,1),
-        vec2(1,-1)
+        vec2( -1, -1 ),
+        vec2(  0,  1 ),
+        vec2(  1, -1 )
     ];
-    // 求中点
-    let u = add(vertices[0],vertices[1]);
-    let v = add(vertices[0],vertices[2]);
-    let p = scale(0.25,add(u,v));
-    // 顶点数组
-    let points = [p];
-    let pointsNum = 5000;
-    for (let index = 0; points.length < pointsNum; index++) {
-       
-        let j = Math.floor(Math.random()*3);
-        p = add(points[index],vertices[j]);
-        p = scale(0.5,p);
-        points.push(p);
+    function triangle(a,b,c)
+    {
+        points.push( a, b, c );
     }
+    // 递归生成点
+    function genPoints(a,b,c,count)
+    {
+        if(count === 0){
+            triangle(a,b,c);
+        }else{
+            count = count - 1;
+
+            let ab = mix( a, b, 0.5 );
+            let ac = mix( a, c, 0.5 );
+            let bc = mix( b, c, 0.5 );
+
+            genPoints( a, ab, ac, count );
+            genPoints( c, ac, bc, count );
+            genPoints( b, bc, ab, count );
+           
+        }
+    }
+
+    genPoints(vertices[0],vertices[1],vertices[2],5);
 
     return points;
 }
@@ -85,9 +98,12 @@ function attrData(gl,program,attrName)
     gl.vertexAttribPointer(vPosition,2,gl.FLOAT,false,0, 0);
     gl.enableVertexAttribArray( vPosition);
 }
+
 function render(gl,points){
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.POINTS,0, points.length);
+    
+    //三角学绘制
+    gl.drawArrays(gl.TRIANGLES,0, points.length);
 }
 </script>
 
