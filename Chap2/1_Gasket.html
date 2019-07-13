@@ -2,9 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>$Title$</title>
+    <title>GasketDemo</title>
+    <!--公共库-->
+    <script type="text/javascript" src="../Common/webgl.js"></script>
+    <script type="text/javascript" src="../Common/MV.js"></script>
 </head>
 <body>
-$END$
+
+<!--Canvas-->
+<canvas id="webgl" width="512" height="512"></canvas>
+
 </body>
+
+<!--顶点着色器-->
+<script id="v-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+void main() {
+    gl_PointSize = 1.0;
+    gl_Position = vPosition;
+}
+</script>
+<!--片段着色器-->
+<script id="f-shader" type="x-shader/v-fragment">
+precision mediump float;
+void main()
+{
+    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+}
+</script>
+<!--主程序-->
+<script>
+
+window.onload = function()
+{   
+    // 1 初始化gl
+    let s = document.querySelector("#f-shader");
+    let [canvas,gl] = initGL();
+
+    // 2 初始化着色器程序
+    let program = initShaders(gl);
+
+    // 3 顶点数据
+    let vertices = [
+        vec2(-1,-1),
+        vec2(0,1),
+        vec2(1,-1)
+    ];
+    // 求中点
+    let u = add(vertices[0],vertices[1]);
+    let v = add(vertices[0],vertices[2]);
+    let p = scale(0.25,add(u,v));
+    // 顶点数组
+    let points = [p];
+    let pointsNum = 5000;
+    for (let index = 0; points.length < pointsNum; index++) {
+       
+        let j = Math.floor(Math.random()*3);
+        p = add(points[index],vertices[j]);
+        p = scale(0.5,p);
+        points.push(p);
+    }
+    
+    // 4 数据传输
+    bufferData(gl,flatten(points));
+    attrData(gl,program,"vPosition");
+
+    // 5 渲染
+    render(gl,points);
+}
+
+function bufferData(gl,data){
+    let bufferId = gl.createBuffer();
+   
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+   
+    gl.bufferData(gl.ARRAY_BUFFER,data, gl.STATIC_DRAW );
+}
+function attrData(gl,program,attrName,data)
+{
+    let  vPosition = gl.getAttribLocation(program,"vPosition");
+    gl.vertexAttribPointer(vPosition,2,gl.FLOAT,false,0, 0);
+    gl.enableVertexAttribArray( vPosition);
+}
+function render(gl,points){
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS,0, points.length);
+}
+</script>
+
 </html>
